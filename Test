@@ -1,21 +1,6 @@
-=IF(ISNUMBER(A1), A1,
-    IFERROR(
-        IF(LEN(A1) - LEN(SUBSTITUTE(A1, "/", "")) = 2,
-            DATE(RIGHT(LEFT(A1, FIND(" ", A1) - 1), 4),
-                 MID(LEFT(A1, FIND(" ", A1) - 1), 4, 2),
-                 LEFT(LEFT(A1, FIND(" ", A1) - 1), 2)),
-            DATE(RIGHT(LEFT(A1, FIND(" ", A1) - 1), 4),
-                 LEFT(LEFT(A1, FIND(" ", A1) - 1), FIND("/", LEFT(A1, FIND(" ", A1) - 1)) - 1),
-                 MID(LEFT(A1, FIND(" ", A1) - 1), FIND("/", LEFT(A1, FIND(" ", A1) - 1)) + 1, 2))),
-        IFERROR(
-            IF(LEN(A1) - LEN(SUBSTITUTE(A1, "/", "")) = 2,
-                DATE(RIGHT(LEFT(A1, FIND(" ", A1) - 1), 4),
-                     LEFT(LEFT(A1, FIND(" ", A1) - 1), FIND("/", LEFT(A1, FIND(" ", A1) - 1)) - 1),
-                     MID(LEFT(A1, FIND(" ", A1) - 1), FIND("/", LEFT(A1, FIND(" ", A1) - 1)) + 1, 2)),
-                DATE(RIGHT(LEFT(A1, FIND(" ", A1) - 1), 4),
-                     MID(LEFT(A1, FIND(" ", A1) - 1), FIND("/", LEFT(A1, FIND(" ", A1) - 1)) + 1, 2),
-                     LEFT(LEFT(A1, FIND(" ", A1) - 1), FIND("/", LEFT(A1, FIND(" ", A1) - 1)) - 1))),
-            ""
-        )
+=IF(ISNUMBER(A1), TEXT(A1, "dd/mm/yyyy"),
+    IF(ISNUMBER(SEARCH("AM", A1) + SEARCH("PM", A1)),
+        TEXT(DATE(RIGHT(A1, 4), LEFT(A1, FIND("/", A1) - 1), MID(A1, FIND("/", A1) + 1, FIND("/", A1, FIND("/", A1) + 1) - FIND("/", A1) - 1)), "dd/mm/yyyy"),
+        TEXT(DATE(RIGHT(A1, 4), LEFT(A1, FIND("/", A1) - 1), MID(A1, FIND("/", A1) + 1, FIND("/", A1, FIND("/", A1) + 1) - FIND("/", A1) - 1)), "dd/mm/yyyy")
     )
 )
