@@ -1,6 +1,6 @@
 =IF(ISNUMBER(A1), TEXT(A1, "dd/mm/yyyy"),
-    IF(ISNUMBER(SEARCH("AM", A1) + SEARCH("PM", A1)),
+    IFERROR(
         TEXT(DATE(RIGHT(A1, 4), LEFT(A1, FIND("/", A1) - 1), MID(A1, FIND("/", A1) + 1, FIND("/", A1, FIND("/", A1) + 1) - FIND("/", A1) - 1)), "dd/mm/yyyy"),
-        TEXT(DATE(RIGHT(A1, 4), LEFT(A1, FIND("/", A1) - 1), MID(A1, FIND("/", A1) + 1, FIND("/", A1, FIND("/", A1) + 1) - FIND("/", A1) - 1)), "dd/mm/yyyy")
+        TEXT(DATE(RIGHT(A1, 4), MID(A1, FIND("/", A1) + 1, FIND("/", A1, FIND("/", A1) + 1) - FIND("/", A1) - 1), LEFT(A1, FIND("/", A1) - 1)), "dd/mm/yyyy")
     )
 )
