@@ -1,0 +1,21 @@
+=IF(ISNUMBER(A1), A1,
+    IFERROR(
+        IF(LEN(A1) - LEN(SUBSTITUTE(A1, "/", "")) = 2,
+            DATE(RIGHT(LEFT(A1, FIND(" ", A1) - 1), 4),
+                 MID(LEFT(A1, FIND(" ", A1) - 1), 4, 2),
+                 LEFT(LEFT(A1, FIND(" ", A1) - 1), 2)),
+            DATE(RIGHT(LEFT(A1, FIND(" ", A1) - 1), 4),
+                 LEFT(LEFT(A1, FIND(" ", A1) - 1), FIND("/", LEFT(A1, FIND(" ", A1) - 1)) - 1),
+                 MID(LEFT(A1, FIND(" ", A1) - 1), FIND("/", LEFT(A1, FIND(" ", A1) - 1)) + 1, 2))),
+        IFERROR(
+            IF(LEN(A1) - LEN(SUBSTITUTE(A1, "/", "")) = 2,
+                DATE(RIGHT(LEFT(A1, FIND(" ", A1) - 1), 4),
+                     LEFT(LEFT(A1, FIND(" ", A1) - 1), FIND("/", LEFT(A1, FIND(" ", A1) - 1)) - 1),
+                     MID(LEFT(A1, FIND(" ", A1) - 1), FIND("/", LEFT(A1, FIND(" ", A1) - 1)) + 1, 2)),
+                DATE(RIGHT(LEFT(A1, FIND(" ", A1) - 1), 4),
+                     MID(LEFT(A1, FIND(" ", A1) - 1), FIND("/", LEFT(A1, FIND(" ", A1) - 1)) + 1, 2),
+                     LEFT(LEFT(A1, FIND(" ", A1) - 1), FIND("/", LEFT(A1, FIND(" ", A1) - 1)) - 1))),
+            ""
+        )
+    )
+)
