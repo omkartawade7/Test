@@ -1,3 +1,1 @@
-=IF(OR(TEXT(DATE(2023,8,A2),"ddd")="Sat", TEXT(DATE(2023,8,A2),"ddd")="Sun", A2>=23), "", TEXT(DATE(2023,7,A2),"ddd"))
-
-=IF(A2>=23, IF(AND(TEXT(DATE(2023,8,A2),"ddd")<>"Sat", TEXT(DATE(2023,8,A2),"ddd")<>"Sun"), INDEX($C$2:$C$31, MATCH(TEXT(DATE(2023,8,A2),"ddd"), TEXT(DATE(2023,7,$A$2:$A$31),"ddd"), 0)), ""), "")
+=IF(OR(WEEKDAY(A61, 2) > 5, ISNUMBER(MATCH(A61, Holidays!A:A, 0))), "", INDEX(C:C, MATCH(A61 - 31, A:A, 0)))
