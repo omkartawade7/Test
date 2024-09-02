@@ -1,1 +1,76 @@
-=IF(OR(WEEKDAY(A61, 2) > 5, ISNUMBER(MATCH(A61, Holidays!A:A, 0))), "", INDEX(C:C, MATCH(A61 - 31, A:A, 0)))
+Sub CopyPivotWithSlicerToPPT()
+    Dim pptApp As Object
+    Dim pptPres As Object
+    Dim pptSlide As Object
+    Dim ws As Worksheet
+    Dim pt As PivotTable
+    Dim slicer As Slicer
+    Dim slicerItem As SlicerItem
+    Dim i As Integer
+
+    ' Set your worksheet containing the PivotTable
+    Set ws = ThisWorkbook.Sheets("Sheet1") ' Change "Sheet1" to your sheet name
+
+    ' Set your PivotTable
+    Set pt = ws.PivotTables("PivotTable1") ' Change "PivotTable1" to your PivotTable name
+
+    ' Set your Slicer
+    Set slicer = ws.Slicers("Slicer_BusinessArea") ' Change "Slicer_BusinessArea" to your Slicer name
+
+    ' Initialize PowerPoint
+    On Error Resume Next
+    Set pptApp = GetObject(, "PowerPoint.Application")
+    If pptApp Is Nothing Then
+        Set pptApp = CreateObject("PowerPoint.Application")
+    End If
+    On Error GoTo 0
+
+    pptApp.Visible = True
+
+    ' Create a new presentation if none is open
+    If pptApp.Presentations.Count = 0 Then
+        Set pptPres = pptApp.Presentations.Add
+    Else
+        Set pptPres = pptApp.ActivePresentation
+    End If
+
+    ' Loop through each item in the slicer
+    i = 1
+    For Each slicerItem In slicer.SlicerItems
+        ' Check if the slicer item is selected
+        If slicerItem.Selected Then
+            ' Deselect all items
+            slicer.SlicerItems(slicerItem.Name).Selected = False
+        End If
+    Next slicerItem
+
+    For Each slicerItem In slicer.SlicerItems
+        ' Select the slicer item
+        slicerItem.Selected = True
+
+        ' Create a new slide
+        Set pptSlide = pptPres.Slides.Add(i, 12) ' 12 = ppLayoutText
+        pptSlide.Shapes(1).TextFrame.TextRange.Text = "Business Area: " & slicerItem.Name
+
+        ' Copy the PivotTable
+        pt.TableRange2.Copy
+
+        ' Paste PivotTable into PowerPoint
+        pptSlide.Shapes.PasteSpecial DataType:=2 ' 2 = ppPasteEnhancedMetafile
+        pptSlide.Shapes(2).Left = 100
+        pptSlide.Shapes(2).Top = 100
+
+        ' Deselect the slicer item
+        slicerItem.Selected = False
+
+        i = i + 1
+    Next slicerItem
+
+    ' Clean up
+    Set pptSlide = Nothing
+    Set pptPres = Nothing
+    Set pptApp = Nothing
+    Set ws = Nothing
+    Set pt = Nothing
+    Set slicer = Nothing
+End Sub
