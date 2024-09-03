@@ -1,15 +1,13 @@
-Sub ExportPivotTableToPPT()
+Sub ExportMultiplePivotTablesToPPT()
     Dim pptApp As Object
     Dim pptPres As Object
     Dim pptSlide As Object
     Dim ws As Worksheet
     Dim pt As PivotTable
+    Dim slideIndex As Integer
 
-    ' Set your worksheet containing the PivotTable
+    ' Set your worksheet containing the PivotTables
     Set ws = ThisWorkbook.Sheets("Sheet1") ' Change "Sheet1" to your sheet name
-
-    ' Set your PivotTable
-    Set pt = ws.PivotTables("PivotTable1") ' Change "PivotTable1" to your PivotTable name
 
     ' Initialize PowerPoint
     On Error Resume Next
@@ -28,27 +26,33 @@ Sub ExportPivotTableToPPT()
         Set pptPres = pptApp.ActivePresentation
     End If
 
-    ' Create a new slide with a blank layout
-    Set pptSlide = pptPres.Slides.Add(pptPres.Slides.Count + 1, 12) ' 12 = ppLayoutTitleOnly
+    ' Loop through each PivotTable in the worksheet
+    For Each pt In ws.PivotTables
+        ' Create a new slide for each PivotTable
+        slideIndex = pptPres.Slides.Count + 1
+        Set pptSlide = pptPres.Slides.Add(slideIndex, 12) ' 12 = ppLayoutTitleOnly
 
-    ' Copy the PivotTable range
-    pt.TableRange2.Copy
+        ' Set the slide title to the name of the PivotTable
+        pptSlide.Shapes.Title.TextFrame.TextRange.Text = "Pivot Table: " & pt.Name
 
-    ' Paste the PivotTable into PowerPoint
-    pptSlide.Shapes.PasteSpecial DataType:=2 ' 2 = ppPasteEnhancedMetafile
+        ' Copy the PivotTable range
+        pt.TableRange2.Copy
 
-    ' Position the pasted table (Optional)
-    With pptSlide.Shapes(pptSlide.Shapes.Count)
-        .Left = 50
-        .Top = 100
-    End With
+        ' Paste the PivotTable into PowerPoint
+        pptSlide.Shapes.PasteSpecial DataType:=2 ' 2 = ppPasteEnhancedMetafile
+
+        ' Position the pasted table (Optional)
+        With pptSlide.Shapes(pptSlide.Shapes.Count)
+            .Left = 50
+            .Top = 100
+        End With
+    Next pt
 
     ' Clean up
     Set pptSlide = Nothing
     Set pptPres = Nothing
     Set pptApp = Nothing
     Set ws = Nothing
-    Set pt = Nothing
 
-    MsgBox "Pivot Table exported to PowerPoint successfully!"
+    MsgBox "All Pivot Tables exported to PowerPoint successfully!"
 End Sub
