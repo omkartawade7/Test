@@ -29,13 +29,19 @@ Sub ExportPivotTableToPPT()
     End If
 
     ' Create a new slide with a blank layout
-    Set pptSlide = pptPres.Slides.Add(pptPres.Slides.Count + 1, ppLayoutBlank)
+    Set pptSlide = pptPres.Slides.Add(pptPres.Slides.Count + 1, 12) ' 12 = ppLayoutTitleOnly
 
     ' Copy the PivotTable range
     pt.TableRange2.Copy
 
     ' Paste the PivotTable into PowerPoint
     pptSlide.Shapes.PasteSpecial DataType:=2 ' 2 = ppPasteEnhancedMetafile
+
+    ' Position the pasted table (Optional)
+    With pptSlide.Shapes(pptSlide.Shapes.Count)
+        .Left = 50
+        .Top = 100
+    End With
 
     ' Clean up
     Set pptSlide = Nothing
