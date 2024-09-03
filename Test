@@ -1,21 +1,15 @@
-Sub CopyPivotWithSlicerToPPT()
+Sub ExportPivotTableToPPT()
     Dim pptApp As Object
     Dim pptPres As Object
     Dim pptSlide As Object
     Dim ws As Worksheet
     Dim pt As PivotTable
-    Dim sc As SlicerCache
-    Dim si As SlicerItem
-    Dim i As Integer
 
     ' Set your worksheet containing the PivotTable
     Set ws = ThisWorkbook.Sheets("Sheet1") ' Change "Sheet1" to your sheet name
 
     ' Set your PivotTable
     Set pt = ws.PivotTables("PivotTable1") ' Change "PivotTable1" to your PivotTable name
-
-    ' Set your SlicerCache
-    Set sc = ThisWorkbook.SlicerCaches("Slicer_BusinessArea") ' Change "Slicer_BusinessArea" to your SlicerCache name
 
     ' Initialize PowerPoint
     On Error Resume Next
@@ -34,35 +28,17 @@ Sub CopyPivotWithSlicerToPPT()
         Set pptPres = pptApp.ActivePresentation
     End If
 
-    ' Loop through each item in the slicer cache
-    i = 1
-    For Each si In sc.SlicerItems
-        ' Clear all filters
-        sc.ClearManualFilter
+    ' Create a new slide
+    Set pptSlide = pptPres.Slides.Add(pptPres.Slides.Count + 1, 12) ' 12 = ppLayoutText
+    pptSlide.Shapes(1).TextFrame.TextRange.Text = "Pivot Table Export"
 
-        ' Select only the current slicer item
-        si.Selected = True
+    ' Copy the PivotTable range
+    pt.TableRange2.Copy
 
-        ' Refresh the PivotTable
-        pt.RefreshTable
-
-        ' Create a new slide
-        Set pptSlide = pptPres.Slides.Add(i, 12) ' 12 = ppLayoutText
-        pptSlide.Shapes(1).TextFrame.TextRange.Text = "Business Area: " & si.Name
-
-        ' Copy the PivotTable
-        pt.TableRange2.Copy
-
-        ' Paste PivotTable into PowerPoint
-        pptSlide.Shapes.PasteSpecial DataType:=2 ' 2 = ppPasteEnhancedMetafile
-        pptSlide.Shapes(2).Left = 100
-        pptSlide.Shapes(2).Top = 100
-
-        i = i + 1
-    Next si
-
-    ' Clear slicer filter to show all items
-    sc.ClearManualFilter
+    ' Paste the PivotTable into PowerPoint
+    pptSlide.Shapes.PasteSpecial DataType:=2 ' 2 = ppPasteEnhancedMetafile
+    pptSlide.Shapes(2).Left = 50
+    pptSlide.Shapes(2).Top = 100
 
     ' Clean up
     Set pptSlide = Nothing
@@ -70,5 +46,6 @@ Sub CopyPivotWithSlicerToPPT()
     Set pptApp = Nothing
     Set ws = Nothing
     Set pt = Nothing
-    Set sc = Nothing
+
+    MsgBox "Pivot Table exported to PowerPoint successfully!"
 End Sub
