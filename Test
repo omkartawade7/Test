@@ -4,8 +4,6 @@ Sub ExportPivotTableToPPT()
     Dim pptSlide As Object
     Dim ws As Worksheet
     Dim pt As PivotTable
-    Dim slideIndex As Integer
-    Dim slideTitle As Object
 
     ' Set your worksheet containing the PivotTable
     Set ws = ThisWorkbook.Sheets("Sheet1") ' Change "Sheet1" to your sheet name
@@ -31,31 +29,13 @@ Sub ExportPivotTableToPPT()
     End If
 
     ' Create a new slide with a blank layout
-    slideIndex = pptPres.Slides.Count + 1
-    Set pptSlide = pptPres.Slides.Add(slideIndex, ppLayoutText) ' 1 = ppLayoutText
-
-    ' Check if the slide already has a title shape
-    If pptSlide.Shapes.HasTitle Then
-        Set slideTitle = pptSlide.Shapes.Title
-    Else
-        ' Add a title shape if none exists
-        Set slideTitle = pptSlide.Shapes.AddTextbox(msoTextOrientationHorizontal, 0, 0, pptPres.PageSetup.SlideWidth, 50)
-    End If
-
-    ' Set the title for the slide
-    slideTitle.TextFrame.TextRange.Text = "Pivot Table Export"
+    Set pptSlide = pptPres.Slides.Add(pptPres.Slides.Count + 1, ppLayoutBlank)
 
     ' Copy the PivotTable range
     pt.TableRange2.Copy
 
     ' Paste the PivotTable into PowerPoint
     pptSlide.Shapes.PasteSpecial DataType:=2 ' 2 = ppPasteEnhancedMetafile
-
-    ' Position the pasted table
-    With pptSlide.Shapes(pptSlide.Shapes.Count)
-        .Left = 50
-        .Top = 100
-    End With
 
     ' Clean up
     Set pptSlide = Nothing
