@@ -10,6 +10,7 @@ Sub ExportPivotTablesToPPT_AutoResize()
     Dim slideWidth As Single
     Dim slideHeight As Single
     Dim tableAspectRatio As Single
+    Dim pptShapeCount As Integer
 
     ' Set your worksheet containing the PivotTables
     Set ws = ThisWorkbook.Sheets("Sheet1") ' Change "Sheet1" to your sheet name
@@ -55,29 +56,39 @@ Sub ExportPivotTablesToPPT_AutoResize()
         ' Copy the PivotTable range
         pt.TableRange2.Copy
 
-        ' Paste the PivotTable into PowerPoint
-        pptSlide.Shapes.PasteSpecial DataType:=2 ' 2 = ppPasteEnhancedMetafile
+        ' Save the number of shapes before pasting
+        pptShapeCount = pptSlide.Shapes.Count
 
-        ' Get reference to the pasted shape
-        Set pastedShape = pptSlide.Shapes(pptSlide.Shapes.Count)
+        ' Try to paste the PivotTable into PowerPoint as an enhanced metafile (picture)
+        On Error Resume Next
+        pptSlide.Shapes.PasteSpecial DataType:=2 ' 2 = ppPasteEnhancedMetafile (Picture)
+        On Error GoTo 0
 
-        ' Determine the aspect ratio of the Pivot Table
-        tableAspectRatio = pastedShape.Width / pastedShape.Height
+        ' Ensure the paste was successful
+        If pptSlide.Shapes.Count > pptShapeCount Then
+            ' Get reference to the pasted shape
+            Set pastedShape = pptSlide.Shapes(pptSlide.Shapes.Count)
 
-        ' Adjust the width and height to fit the slide while maintaining aspect ratio
-        If slideWidth / tableAspectRatio <= slideHeight Then
-            ' If width is the limiting factor
-            pastedShape.Width = slideWidth * 0.9 ' 90% of the slide width
-            pastedShape.Height = pastedShape.Width / tableAspectRatio
+            ' Determine the aspect ratio of the Pivot Table
+            tableAspectRatio = pastedShape.Width / pastedShape.Height
+
+            ' Adjust the width and height to fit the slide while maintaining aspect ratio
+            If slideWidth / tableAspectRatio <= slideHeight Then
+                ' If width is the limiting factor
+                pastedShape.Width = slideWidth * 0.9 ' 90% of the slide width
+                pastedShape.Height = pastedShape.Width / tableAspectRatio
+            Else
+                ' If height is the limiting factor
+                pastedShape.Height = slideHeight * 0.8 ' 80% of the slide height
+                pastedShape.Width = pastedShape.Height * tableAspectRatio
+            End If
+
+            ' Center the Pivot Table on the slide
+            pastedShape.Left = (slideWidth - pastedShape.Width) / 2
+            pastedShape.Top = (slideHeight - pastedShape.Height) / 2 + 50 ' Account for title height
         Else
-            ' If height is the limiting factor
-            pastedShape.Height = slideHeight * 0.8 ' 80% of the slide height
-            pastedShape.Width = pastedShape.Height * tableAspectRatio
+            MsgBox "Error: Unable to paste the Pivot Table to slide " & slideIndex, vbCritical
         End If
-
-        ' Center the Pivot Table on the slide
-        pastedShape.Left = (slideWidth - pastedShape.Width) / 2
-        pastedShape.Top = (slideHeight - pastedShape.Height) / 2 + 50 ' Account for title height
     Next pt
 
     ' Clean up
