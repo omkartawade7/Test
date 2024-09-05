@@ -6,6 +6,7 @@ Sub ExportMultiplePivotTablesToPPT()
     Dim pt As PivotTable
     Dim slideIndex As Integer
     Dim slideTitle As Object
+    Dim pastedShape As Object
 
     ' Set your worksheet containing the PivotTables
     Set ws = ThisWorkbook.Sheets("Sheet1") ' Change "Sheet1" to your sheet name
@@ -50,11 +51,16 @@ Sub ExportMultiplePivotTablesToPPT()
         ' Paste the PivotTable into PowerPoint
         pptSlide.Shapes.PasteSpecial DataType:=2 ' 2 = ppPasteEnhancedMetafile
 
-        ' Position the pasted table (Optional)
-        With pptSlide.Shapes(pptSlide.Shapes.Count)
-            .Left = 50
-            .Top = 100
-        End With
+        ' Get reference to the pasted shape
+        Set pastedShape = pptSlide.Shapes(pptSlide.Shapes.Count)
+
+        ' Position the pasted shape (Optional)
+        pastedShape.Left = 50
+        pastedShape.Top = 100
+
+        ' Resize the pasted shape
+        pastedShape.Width = 500 ' Set the desired width
+        pastedShape.Height = 300 ' Set the desired height
     Next pt
 
     ' Clean up
@@ -63,5 +69,5 @@ Sub ExportMultiplePivotTablesToPPT()
     Set pptApp = Nothing
     Set ws = Nothing
 
-    MsgBox "All Pivot Tables exported to PowerPoint successfully!"
+    MsgBox "All Pivot Tables exported and resized successfully!"
 End Sub
