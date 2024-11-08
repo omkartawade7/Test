@@ -1,121 +1,12 @@
-Sub ExportPivotTablesInCustomOrderToPPT()
-    Dim pptApp As Object
-    Dim pptPres As Object
-    Dim pptSlide As Object
+
+Sub ToggleSheetVisibility()
     Dim ws As Worksheet
-    Dim pt As PivotTable
-    Dim customOrder As Variant
-    Dim ptName As String
-    Dim slideIndex As Integer
-    Dim slideTitle As Object
-    Dim pastedShape As Object
-    Dim slideWidth As Single
-    Dim slideHeight As Single
-    Dim tableAspectRatio As Single
-    Dim pptShapeCount As Integer
-
-    ' Set your worksheet containing the PivotTables
-    Set ws = ThisWorkbook.Sheets("Sheet1") ' Change "Sheet1" to your sheet name
-
-    ' Create an array with the custom order of PivotTable names
-    customOrder = Array("PivotTable1", "PivotTable3", "PivotTable2") ' Modify the names as per your requirement
-
-    ' Initialize PowerPoint
-    On Error Resume Next
-    Set pptApp = GetObject(, "PowerPoint.Application")
-    If pptApp Is Nothing Then
-        Set pptApp = CreateObject("PowerPoint.Application")
-    End If
-    On Error GoTo 0
-
-    pptApp.Visible = True
-
-    ' Create a new presentation if none is open
-    If pptApp.Presentations.Count = 0 Then
-        Set pptPres = pptApp.Presentations.Add
+    Set ws = ThisWorkbook.Sheets("SheetName") ' Replace "SheetName" with your sheet's name
+    
+    ' Check if the sheet is visible or hidden and toggle its visibility
+    If ws.Visible = xlSheetVisible Then
+        ws.Visible = xlSheetHidden
     Else
-        Set pptPres = pptApp.ActivePresentation
+        ws.Visible = xlSheetVisible
     End If
-
-    ' Get slide width and height
-    slideWidth = pptPres.PageSetup.SlideWidth
-    slideHeight = pptPres.PageSetup.SlideHeight
-
-    ' Loop through the custom order array
-    For i = LBound(customOrder) To UBound(customOrder)
-        ptName = customOrder(i)
-
-        ' Find the PivotTable by name
-        On Error Resume Next
-        Set pt = ws.PivotTables(ptName)
-        On Error GoTo 0
-
-        ' If PivotTable is found
-        If Not pt Is Nothing Then
-            ' Create a new slide for each PivotTable
-            slideIndex = pptPres.Slides.Count + 1
-            Set pptSlide = pptPres.Slides.Add(slideIndex, 12) ' 12 = ppLayoutTitleOnly
-
-            ' Check if the slide already has a title shape
-            If pptSlide.Shapes.HasTitle Then
-                Set slideTitle = pptSlide.Shapes.Title
-            Else
-                ' Add a title shape if none exists
-                Set slideTitle = pptSlide.Shapes.AddTextbox(msoTextOrientationHorizontal, 10, 10, slideWidth - 20, 50)
-            End If
-
-            ' Set the title for the slide
-            slideTitle.TextFrame.TextRange.Text = "Pivot Table: " & pt.Name
-
-            ' Copy the PivotTable range as a picture
-            pt.TableRange2.CopyPicture Appearance:=xlScreen, Format:=xlPicture
-
-            ' Save the number of shapes before pasting
-            pptShapeCount = pptSlide.Shapes.Count
-
-            ' Try to paste the PivotTable into PowerPoint as a picture
-            On Error Resume Next
-            pptSlide.Shapes.PasteSpecial DataType:=2 ' 2 = ppPasteEnhancedMetafile (Picture)
-            On Error GoTo 0
-
-            ' Ensure the paste was successful
-            If pptSlide.Shapes.Count > pptShapeCount Then
-                ' Get reference to the pasted shape
-                Set pastedShape = pptSlide.Shapes(pptSlide.Shapes.Count)
-
-                ' Determine the aspect ratio of the Pivot Table
-                tableAspectRatio = pastedShape.Width / pastedShape.Height
-
-                ' Adjust the width and height to fit the slide while maintaining aspect ratio
-                If slideWidth / tableAspectRatio <= slideHeight Then
-                    ' If width is the limiting factor
-                    pastedShape.Width = slideWidth * 0.9 ' 90% of the slide width
-                    pastedShape.Height = pastedShape.Width / tableAspectRatio
-                Else
-                    ' If height is the limiting factor
-                    pastedShape.Height = slideHeight * 0.8 ' 80% of the slide height
-                    pastedShape.Width = pastedShape.Height * tableAspectRatio
-                End If
-
-                ' Center the Pivot Table on the slide
-                pastedShape.Left = (slideWidth - pastedShape.Width) / 2
-                pastedShape.Top = (slideHeight - pastedShape.Height) / 2 + 50 ' Account for title height
-            Else
-                MsgBox "Error: Unable to paste the Pivot Table '" & ptName & "' to slide " & slideIndex, vbCritical
-            End If
-        Else
-            MsgBox "Error: Pivot Table '" & ptName & "' not found on the worksheet.", vbCritical
-        End If
-
-        ' Clear the PivotTable reference for the next loop iteration
-        Set pt = Nothing
-    Next i
-
-    ' Clean up
-    Set pptSlide = Nothing
-    Set pptPres = Nothing
-    Set pptApp = Nothing
-    Set ws = Nothing
-
-    MsgBox "All Pivot Tables exported and resized automatically in the specified custom order!"
 End Sub
