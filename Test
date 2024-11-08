@@ -1,11 +1,11 @@
 
-Sub ToggleSheetVisibility()
+Sub ToggleSheetCompleteVisibility()
     Dim ws As Worksheet
     Set ws = ThisWorkbook.Sheets("SheetName") ' Replace "SheetName" with your sheet's name
     
-    ' Check if the sheet is visible or hidden and toggle its visibility
+    ' Check if the sheet is visible or very hidden, and toggle its visibility
     If ws.Visible = xlSheetVisible Then
-        ws.Visible = xlSheetHidden
+        ws.Visible = xlSheetVeryHidden
     Else
         ws.Visible = xlSheetVisible
     End If
