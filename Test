@@ -1,12 +1,72 @@
+WITH events AS (
+    SELECT 
+        agent_id,
+        'Shift' AS event_type,
+        shift_start AS start_time,
+        shift_end AS end_time
+    FROM 
+        shift_schedule
 
-Sub ToggleSheetCompleteVisibility()
-    Dim ws As Worksheet
-    Set ws = ThisWorkbook.Sheets("SheetName") ' Replace "SheetName" with your sheet's name
+    UNION ALL
+
+    SELECT 
+        agent_id,
+        break_type AS event_type,
+        break_start AS start_time,
+        break_end AS end_time
+    FROM 
+        break_schedule
+),
+ordered_events AS (
+    SELECT 
+        agent_id,
+        event_type,
+        start_time,
+        end_time,
+        LAG(end_time) OVER (PARTITION BY agent_id ORDER BY start_time) AS prev_end_time
+    FROM 
+        events
+),
+work_periods AS (
+    SELECT 
+        agent_id,
+        'Work' AS event_type,
+        COALESCE(prev_end_time, shift_start) AS start_time,
+        start_time AS end_time
+    FROM 
+        ordered_events
+    JOIN shift_schedule USING (agent_id)
+    WHERE prev_end_time IS NOT NULL AND prev_end_time < start_time
     
-    ' Check if the sheet is visible or very hidden, and toggle its visibility
-    If ws.Visible = xlSheetVisible Then
-        ws.Visible = xlSheetVeryHidden
-    Else
-        ws.Visible = xlSheetVisible
-    End If
-End Sub
+    UNION ALL
+    
+    -- Initial Work period before the first break
+    SELECT 
+        agent_id,
+        'Work' AS event_type,
+        shift_start AS start_time,
+        MIN(start_time) AS end_time
+    FROM 
+        events
+    JOIN shift_schedule USING (agent_id)
+    WHERE event_type != 'Shift'
+    GROUP BY agent_id, shift_start
+    
+    UNION ALL
+    
+    -- Final Work period after the last break
+    SELECT 
+        agent_id,
+        'Work' AS event_type,
+        MAX(end_time) AS start_time,
+        shift_end AS end_time
+    FROM 
+        events
+    JOIN shift_schedule USING (agent_id)
+    WHERE event_type != 'Shift'
+    GROUP BY agent_id, shift_end
+)
+SELECT * FROM events
+UNION ALL
+SELECT * FROM work_periods
+ORDER BY agent_id, start_time;
