@@ -1,72 +1,88 @@
-WITH events AS (
+WITH ordered_events AS (
     SELECT 
-        agent_id,
-        'Shift' AS event_type,
-        shift_start AS start_time,
-        shift_end AS end_time
-    FROM 
-        shift_schedule
-
-    UNION ALL
-
-    SELECT 
-        agent_id,
-        code_type AS event_type,
-        code_start AS start_time,
-        code_end AS end_time
-    FROM 
-        schedule_code
-),
-ordered_events AS (
-    SELECT 
-        agent_id,
-        event_type,
+        agent_name,
+        schedule_name,
         start_time,
         end_time,
-        LAG(end_time) OVER (PARTITION BY agent_id ORDER BY start_time) AS prev_end_time
+        schedule_type,
+        LAG(end_time) OVER (PARTITION BY agent_name ORDER BY start_time) AS prev_end_time
     FROM 
-        events
+        agent_schedule
 ),
-work_periods AS (
-    -- Initial Work period before the first scheduled event
+primary_schedule AS (
+    -- Get the Primary schedule for each agent
     SELECT 
-        agent_id,
-        'Work' AS event_type,
-        shift_start AS start_time,
-        MIN(start_time) AS end_time
+        agent_name,
+        schedule_name AS primary_schedule_name,
+        start_time AS primary_start_time,
+        end_time AS primary_end_time
     FROM 
-        events
-    JOIN shift_schedule USING (agent_id)
-    WHERE event_type != 'Shift'
-    GROUP BY agent_id, shift_start
+        agent_schedule
+    WHERE 
+        schedule_type = 'Primary'
+),
+gaps AS (
+    -- Generate periods of the Primary schedule between other events
+    SELECT 
+        o.agent_name,
+        p.primary_schedule_name AS schedule_name,
+        o.prev_end_time AS start_time,
+        o.start_time AS end_time,
+        'Primary' AS schedule_type
+    FROM 
+        ordered_events o
+    JOIN primary_schedule p ON o.agent_name = p.agent_name
+    WHERE 
+        o.prev_end_time IS NOT NULL 
+        AND o.prev_end_time < o.start_time 
+        AND o.schedule_type != 'Primary'
 
     UNION ALL
 
-    -- Work periods between scheduled events
+    -- Add the initial Primary period before the first event
     SELECT 
-        agent_id,
-        'Work' AS event_type,
-        prev_end_time AS start_time,
-        start_time AS end_time
+        p.agent_name,
+        p.primary_schedule_name AS schedule_name,
+        p.primary_start_time AS start_time,
+        MIN(o.start_time) AS end_time,
+        'Primary' AS schedule_type
     FROM 
-        ordered_events
-    WHERE prev_end_time IS NOT NULL AND prev_end_time < start_time
+        primary_schedule p
+    JOIN ordered_events o ON p.agent_name = o.agent_name
+    GROUP BY p.agent_name, p.primary_schedule_name, p.primary_start_time
 
     UNION ALL
 
-    -- Final Work period after the last scheduled event until shift end
+    -- Add the final Primary period after the last event
     SELECT 
-        agent_id,
-        'Work' AS event_type,
-        MAX(end_time) AS start_time,
-        shift_end AS end_time
+        p.agent_name,
+        p.primary_schedule_name AS schedule_name,
+        MAX(o.end_time) AS start_time,
+        p.primary_end_time AS end_time,
+        'Primary' AS schedule_type
     FROM 
-        events
-    JOIN shift_schedule USING (agent_id)
-    WHERE event_type != 'Shift'
-    GROUP BY agent_id, shift_end
+        primary_schedule p
+    JOIN ordered_events o ON p.agent_name = o.agent_name
+    GROUP BY p.agent_name, p.primary_schedule_name, p.primary_end_time
 )
-SELECT * FROM events
+SELECT 
+    agent_name, 
+    schedule_name, 
+    start_time, 
+    end_time, 
+    schedule_type
+FROM 
+    agent_schedule
+
 UNION ALL
-SELECT * FROM work_periods
-ORDER BY agent_id, start_time;
+
+SELECT 
+    agent_name, 
+    schedule_name, 
+    start_time, 
+    end_time, 
+    schedule_type
+FROM 
+    gaps
+ORDER BY 
+    agent_name, start_time;
