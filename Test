@@ -1,11 +1,11 @@
 SELECT 
     decimal_time,
     
-    -- Round time to the nearest half hour
+    -- Round time to the nearest half-hour
     floor(decimal_time / 60) * 60 + 
     CASE 
-        WHEN (decimal_time / 60) % 1 < 0.25 THEN 0
-        WHEN (decimal_time / 60) % 1 < 0.75 THEN 0.5
+        WHEN MOD(decimal_time / 60, 1) < 0.25 THEN 0
+        WHEN MOD(decimal_time / 60, 1) < 0.75 THEN 0.5
         ELSE 1
     END * 60 AS rounded_time
 FROM 
