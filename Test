@@ -1,88 +1,12 @@
-WITH ordered_events AS (
-    SELECT 
-        agent_name,
-        schedule_name,
-        start_time,
-        end_time,
-        schedule_type,
-        LAG(end_time) OVER (PARTITION BY agent_name ORDER BY start_time) AS prev_end_time
-    FROM 
-        agent_schedule
-),
-primary_schedule AS (
-    -- Get the Primary schedule for each agent
-    SELECT 
-        agent_name,
-        schedule_name AS primary_schedule_name,
-        start_time AS primary_start_time,
-        end_time AS primary_end_time
-    FROM 
-        agent_schedule
-    WHERE 
-        schedule_type = 'Primary'
-),
-gaps AS (
-    -- Generate periods of the Primary schedule between other events
-    SELECT 
-        o.agent_name,
-        p.primary_schedule_name AS schedule_name,
-        o.prev_end_time AS start_time,
-        o.start_time AS end_time,
-        'Primary' AS schedule_type
-    FROM 
-        ordered_events o
-    JOIN primary_schedule p ON o.agent_name = p.agent_name
-    WHERE 
-        o.prev_end_time IS NOT NULL 
-        AND o.prev_end_time < o.start_time 
-        AND o.schedule_type != 'Primary'
-
-    UNION ALL
-
-    -- Add the initial Primary period before the first event
-    SELECT 
-        p.agent_name,
-        p.primary_schedule_name AS schedule_name,
-        p.primary_start_time AS start_time,
-        MIN(o.start_time) AS end_time,
-        'Primary' AS schedule_type
-    FROM 
-        primary_schedule p
-    JOIN ordered_events o ON p.agent_name = o.agent_name
-    GROUP BY p.agent_name, p.primary_schedule_name, p.primary_start_time
-
-    UNION ALL
-
-    -- Add the final Primary period after the last event
-    SELECT 
-        p.agent_name,
-        p.primary_schedule_name AS schedule_name,
-        MAX(o.end_time) AS start_time,
-        p.primary_end_time AS end_time,
-        'Primary' AS schedule_type
-    FROM 
-        primary_schedule p
-    JOIN ordered_events o ON p.agent_name = o.agent_name
-    GROUP BY p.agent_name, p.primary_schedule_name, p.primary_end_time
-)
 SELECT 
-    agent_name, 
-    schedule_name, 
-    start_time, 
-    end_time, 
-    schedule_type
+    decimal_time,
+    
+    -- Round time to the nearest half-hour
+    floor(decimal_time / 60) * 60 + 
+    CASE 
+        WHEN (decimal_time % 60) < 15 THEN 0
+        WHEN (decimal_time % 60) < 45 THEN 30
+        ELSE 0 
+    END AS rounded_time
 FROM 
-    agent_schedule
-
-UNION ALL
-
-SELECT 
-    agent_name, 
-    schedule_name, 
-    start_time, 
-    end_time, 
-    schedule_type
-FROM 
-    gaps
-ORDER BY 
-    agent_name, start_time;
+    agent_schedule;
