@@ -1,12 +1,12 @@
 SELECT 
     decimal_time,
     
-    -- Round time to the nearest half-hour
+    -- Round time to the nearest half hour
     floor(decimal_time / 60) * 60 + 
     CASE 
-        WHEN (decimal_time % 60) < 15 THEN 0
-        WHEN (decimal_time % 60) < 45 THEN 30
-        ELSE 0 
-    END AS rounded_time
+        WHEN (decimal_time / 60) % 1 < 0.25 THEN 0
+        WHEN (decimal_time / 60) % 1 < 0.75 THEN 0.5
+        ELSE 1
+    END * 60 AS rounded_time
 FROM 
     agent_schedule;
