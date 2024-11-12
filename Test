@@ -1,26 +1,29 @@
-Sub CopyPivotTableAsTable()
+Sub CopyPivotTableAsTableUsingName()
     Dim sourceSheet As Worksheet
     Dim targetWorkbook As Workbook
     Dim targetSheet As Worksheet
+    Dim pivotTable As PivotTable
     Dim pivotTableRange As Range
     Dim lastRow As Long
     Dim lastCol As Long
+    Dim targetRow As Long
 
-    ' Set the source sheet and pivot table range
-    Set sourceSheet = ThisWorkbook.Sheets("Sheet1")  ' Replace with the actual sheet name containing the pivot table
+    ' Set the source sheet and pivot table by name
+    Set sourceSheet = ThisWorkbook.Sheets("Sheet1") ' Replace with the actual sheet name
+    Set pivotTable = sourceSheet.PivotTables("PivotTable1") ' Replace with the actual pivot table name
     
-    ' Find the last row and last column of the pivot table range
-    With sourceSheet.PivotTables(1).TableRange1
+    ' Define the pivot table range
+    With pivotTable.TableRange1
         lastRow = .Rows.Count
         lastCol = .Columns.Count
-        Set pivotTableRange = .Resize(lastRow, lastCol) ' Entire pivot table range
+        Set pivotTableRange = .Resize(lastRow, lastCol) ' Full pivot table range
     End With
-    
-    ' Open or set the destination workbook
-    Set targetWorkbook = Workbooks.Open("C:\path\to\DestinationWorkbook.xlsx") ' Change to your destination workbook path
-    Set targetSheet = targetWorkbook.Sheets(1)  ' Adjust sheet as needed
 
-    ' Clear the target sheet if needed
+    ' Open or set the destination workbook
+    Set targetWorkbook = Workbooks.Open("C:\path\to\DestinationWorkbook.xlsx") ' Update with your file path
+    Set targetSheet = targetWorkbook.Sheets(1) ' Choose or change to a specific sheet if needed
+
+    ' Clear the target sheet if necessary
     targetSheet.Cells.Clear
 
     ' Copy the pivot table range as values
@@ -32,7 +35,7 @@ Sub CopyPivotTableAsTable()
     With targetSheet
         .ListObjects.Add(SourceType:=xlSrcRange, _
                          Source:=targetSheet.Range("A1").Resize(lastRow, lastCol), _
-                         XlListObjectHasHeaders:=xlYes).Name = "CopiedTable"
+                         XlListObjectHasHeaders:=xlYes).Name = "CopiedTable_" & pivotTable.Name
     End With
 
     ' Save and close the target workbook if needed
