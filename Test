@@ -1,12 +1,44 @@
-SELECT 
-    decimal_time,
+Sub CopyPivotTableAsTable()
+    Dim sourceSheet As Worksheet
+    Dim targetWorkbook As Workbook
+    Dim targetSheet As Worksheet
+    Dim pivotTableRange As Range
+    Dim lastRow As Long
+    Dim lastCol As Long
+
+    ' Set the source sheet and pivot table range
+    Set sourceSheet = ThisWorkbook.Sheets("Sheet1")  ' Replace with the actual sheet name containing the pivot table
     
-    -- Round time to the nearest half-hour
-    floor(decimal_time / 60) * 60 + 
-    CASE 
-        WHEN MOD(decimal_time / 60, 1) < 0.25 THEN 0
-        WHEN MOD(decimal_time / 60, 1) < 0.75 THEN 0.5
-        ELSE 1
-    END * 60 AS rounded_time
-FROM 
-    agent_schedule;
+    ' Find the last row and last column of the pivot table range
+    With sourceSheet.PivotTables(1).TableRange1
+        lastRow = .Rows.Count
+        lastCol = .Columns.Count
+        Set pivotTableRange = .Resize(lastRow, lastCol) ' Entire pivot table range
+    End With
+    
+    ' Open or set the destination workbook
+    Set targetWorkbook = Workbooks.Open("C:\path\to\DestinationWorkbook.xlsx") ' Change to your destination workbook path
+    Set targetSheet = targetWorkbook.Sheets(1)  ' Adjust sheet as needed
+
+    ' Clear the target sheet if needed
+    targetSheet.Cells.Clear
+
+    ' Copy the pivot table range as values
+    pivotTableRange.Copy
+    targetSheet.Range("A1").PasteSpecial Paste:=xlPasteValuesAndNumberFormats
+    Application.CutCopyMode = False  ' Clear clipboard
+
+    ' Convert the pasted range to a table in the target workbook
+    With targetSheet
+        .ListObjects.Add(SourceType:=xlSrcRange, _
+                         Source:=targetSheet.Range("A1").Resize(lastRow, lastCol), _
+                         XlListObjectHasHeaders:=xlYes).Name = "CopiedTable"
+    End With
+
+    ' Save and close the target workbook if needed
+    targetWorkbook.Save
+    ' targetWorkbook.Close ' Uncomment if you want to close the workbook after saving
+
+    MsgBox "Pivot table copied as a regular table in the destination workbook."
+
+End Sub
