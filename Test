@@ -1,47 +1,15 @@
-Sub CopyPivotTableAsTableUsingName()
-    Dim sourceSheet As Worksheet
-    Dim targetWorkbook As Workbook
-    Dim targetSheet As Worksheet
-    Dim pivotTable As PivotTable
-    Dim pivotTableRange As Range
-    Dim lastRow As Long
-    Dim lastCol As Long
-    Dim targetRow As Long
+Sub RefreshDataConnection()
+    Dim xlApp As Object
+    Dim wb As Object
 
-    ' Set the source sheet and pivot table by name
-    Set sourceSheet = ThisWorkbook.Sheets("Sheet1") ' Replace with the actual sheet name
-    Set pivotTable = sourceSheet.PivotTables("PivotTable1") ' Replace with the actual pivot table name
-    
-    ' Define the pivot table range
-    With pivotTable.TableRange1
-        lastRow = .Rows.Count
-        lastCol = .Columns.Count
-        Set pivotTableRange = .Resize(lastRow, lastCol) ' Full pivot table range
-    End With
+    Set xlApp = CreateObject("Excel.Application")
+    Set wb = xlApp.Workbooks.Open("C:\Path\To\Your\File.xlsx", UpdateLinks:=True)
 
-    ' Open or set the destination workbook
-    Set targetWorkbook = Workbooks.Open("C:\path\to\DestinationWorkbook.xlsx") ' Update with your file path
-    Set targetSheet = targetWorkbook.Sheets(1) ' Choose or change to a specific sheet if needed
+    wb.RefreshAll
+    wb.Save
+    wb.Close SaveChanges:=True
+    xlApp.Quit
 
-    ' Clear the target sheet if necessary
-    targetSheet.Cells.Clear
-
-    ' Copy the pivot table range as values
-    pivotTableRange.Copy
-    targetSheet.Range("A1").PasteSpecial Paste:=xlPasteValuesAndNumberFormats
-    Application.CutCopyMode = False  ' Clear clipboard
-
-    ' Convert the pasted range to a table in the target workbook
-    With targetSheet
-        .ListObjects.Add(SourceType:=xlSrcRange, _
-                         Source:=targetSheet.Range("A1").Resize(lastRow, lastCol), _
-                         XlListObjectHasHeaders:=xlYes).Name = "CopiedTable_" & pivotTable.Name
-    End With
-
-    ' Save and close the target workbook if needed
-    targetWorkbook.Save
-    ' targetWorkbook.Close ' Uncomment if you want to close the workbook after saving
-
-    MsgBox "Pivot table copied as a regular table in the destination workbook."
-
+    Set wb = Nothing
+    Set xlApp = Nothing
 End Sub
