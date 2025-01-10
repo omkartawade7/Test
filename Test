@@ -1,4 +1,4 @@
-Sub SaveSpecifiedRangeAsPDF()
+Sub SaveSpecifiedRangeAsPDFOnePage()
     Dim rng As Range
     Dim filePath As String
 
@@ -13,9 +13,21 @@ Sub SaveSpecifiedRangeAsPDF()
     ' Check if user canceled the save
     If filePath = "False" Then Exit Sub
 
+    ' Configure page setup to fit the range on one page
+    With rng.Worksheet.PageSetup
+        .PrintArea = rng.Address
+        .Zoom = False                     ' Disable default zoom
+        .FitToPagesWide = 1               ' Fit to one page wide
+        .FitToPagesTall = 1               ' Fit to one page tall
+        .Orientation = xlLandscape        ' Optional: Use landscape orientation
+        .TopMargin = Application.InchesToPoints(0.5)
+        .BottomMargin = Application.InchesToPoints(0.5)
+        .LeftMargin = Application.InchesToPoints(0.5)
+        .RightMargin = Application.InchesToPoints(0.5)
+    End With
+
     ' Export the specified range to PDF
     With rng.Worksheet
-        .PageSetup.PrintArea = rng.Address
         .ExportAsFixedFormat Type:=xlTypePDF, Filename:=filePath, _
             Quality:=xlQualityStandard, IncludeDocProperties:=True, _
             IgnorePrintAreas:=False, OpenAfterPublish:=True
