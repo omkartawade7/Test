@@ -1,15 +1,25 @@
-Sub RefreshDataConnection()
-    Dim xlApp As Object
-    Dim wb As Object
+Sub SaveSpecifiedRangeAsPDF()
+    Dim rng As Range
+    Dim filePath As String
 
-    Set xlApp = CreateObject("Excel.Application")
-    Set wb = xlApp.Workbooks.Open("C:\Path\To\Your\File.xlsx", UpdateLinks:=True)
+    ' Define the range to export
+    Set rng = Worksheets("Sheet1").Range("A1:D10") ' Change to your sheet and range
 
-    wb.RefreshAll
-    wb.Save
-    wb.Close SaveChanges:=True
-    xlApp.Quit
+    ' Set the file path for the PDF
+    filePath = Application.GetSaveAsFilename( _
+        InitialFileName:=ThisWorkbook.Path & "\Specified_Range.pdf", _
+        FileFilter:="PDF Files (*.pdf), *.pdf")
 
-    Set wb = Nothing
-    Set xlApp = Nothing
+    ' Check if user canceled the save
+    If filePath = "False" Then Exit Sub
+
+    ' Export the specified range to PDF
+    With rng.Worksheet
+        .PageSetup.PrintArea = rng.Address
+        .ExportAsFixedFormat Type:=xlTypePDF, Filename:=filePath, _
+            Quality:=xlQualityStandard, IncludeDocProperties:=True, _
+            IgnorePrintAreas:=False, OpenAfterPublish:=True
+    End With
+
+    MsgBox "PDF saved successfully to: " & filePath, vbInformation
 End Sub
