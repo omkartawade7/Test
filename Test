@@ -1,37 +1,13 @@
-Sub SaveSpecifiedRangeAsPDFOnePage()
-    Dim rng As Range
-    Dim filePath As String
-
-    ' Define the range to export
-    Set rng = Worksheets("Sheet1").Range("A1:D10") ' Change to your sheet and range
-
-    ' Set the file path for the PDF
-    filePath = Application.GetSaveAsFilename( _
-        InitialFileName:=ThisWorkbook.Path & "\Specified_Range.pdf", _
-        FileFilter:="PDF Files (*.pdf), *.pdf")
-
-    ' Check if user canceled the save
-    If filePath = "False" Then Exit Sub
-
-    ' Configure page setup to fit the range on one page
-    With rng.Worksheet.PageSetup
-        .PrintArea = rng.Address
-        .Zoom = False                     ' Disable default zoom
-        .FitToPagesWide = 1               ' Fit to one page wide
-        .FitToPagesTall = 1               ' Fit to one page tall
-        .Orientation = xlLandscape        ' Optional: Use landscape orientation
-        .TopMargin = Application.InchesToPoints(0.5)
-        .BottomMargin = Application.InchesToPoints(0.5)
-        .LeftMargin = Application.InchesToPoints(0.5)
-        .RightMargin = Application.InchesToPoints(0.5)
-    End With
-
-    ' Export the specified range to PDF
-    With rng.Worksheet
-        .ExportAsFixedFormat Type:=xlTypePDF, Filename:=filePath, _
-            Quality:=xlQualityStandard, IncludeDocProperties:=True, _
-            IgnorePrintAreas:=False, OpenAfterPublish:=True
-    End With
-
-    MsgBox "PDF saved successfully to: " & filePath, vbInformation
+Sub RunPythonCommand()
+    Dim pythonExe As String
+    Dim command As String
+    
+    ' Path to Python executable
+    pythonExe = """C:\Users\YourUsername\AppData\Local\Programs\Python\Python39\python.exe"""
+    
+    ' Command to execute (prints "Hello from VBA")
+    command = pythonExe & " -c ""print('Hello from VBA')"""
+    
+    ' Run the command
+    Shell command, vbNormalFocus
 End Sub
