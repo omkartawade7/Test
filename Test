@@ -1,13 +1,5 @@
-Sub RunPythonCommand()
-    Dim pythonExe As String
-    Dim command As String
-    
-    ' Path to Python executable
-    pythonExe = """C:\Users\YourUsername\AppData\Local\Programs\Python\Python39\python.exe"""
-    
-    ' Command to execute (prints "Hello from VBA")
-    command = pythonExe & " -c ""print('Hello from VBA')"""
-    
-    ' Run the command
-    Shell command, vbNormalFocus
-End Sub
+    (CAST(SPLIT_PART(time_column, ':', 1) AS INTEGER) * 365 * 24 * 3600) +  -- Years to seconds
+    (CAST(SPLIT_PART(time_column, ':', 2) AS INTEGER) * 24 * 3600) +        -- Days to seconds
+    (CAST(SPLIT_PART(time_column, ':', 3) AS INTEGER) * 3600) +             -- Hours to seconds
+    (CAST(SPLIT_PART(SPLIT_PART(time_column, ':', 4), '.', 1) AS INTEGER) * 60) +  -- Minutes to seconds
+    (CAST(SPLIT_PART(SPLIT_PART(time_column, ':', 4), '.', 2) AS INTEGER) / 1000)  -- Milliseconds to seconds
